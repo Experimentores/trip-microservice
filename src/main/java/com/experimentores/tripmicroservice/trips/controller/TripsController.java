@@ -1,12 +1,11 @@
 package com.experimentores.tripmicroservice.trips.controller;
 
 import com.crudjpa.controller.CrudController;
-import com.crudjpa.controller.SimpleCrudController;
 import com.crudjpa.util.TextDocumentation;
 import com.experimentores.tripmicroservice.trips.domain.model.Trip;
 import com.experimentores.tripmicroservice.trips.domain.services.ITripService;
-import com.experimentores.tripmicroservice.trips.exception.ErrorMessage;
 import com.experimentores.tripmicroservice.trips.exception.InvalidCreateResourceException;
+import com.experimentores.tripmicroservice.trips.exception.ValidationException;
 import com.experimentores.tripmicroservice.trips.mapping.TripMapper;
 import com.experimentores.tripmicroservice.trips.resources.CreateTripResource;
 import com.experimentores.tripmicroservice.trips.resources.TripResource;
@@ -15,18 +14,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.io.InvalidObjectException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tripstore/v1/trips/")
@@ -38,6 +35,14 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         super(tripService, tripMapper);
         this.tripService = tripService;
         this.tripMapper = tripMapper;
+    }
+
+    private void validateCreate(CreateTripResource resource) {
+        Instant now = Instant.now();
+        Instant date = resource.getDate().toInstant();
+        if(now.isAfter(date)) {
+            throw new ValidationException("Invalid date");
+        }
     }
 
     @GetMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -61,10 +66,16 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TripResource> createTrip(@Valid @RequestBody CreateTripResource tripResource, BindingResult result) throws InvalidCreateResourceException {
+    public ResponseEntity<TripResource> createTrip(@Valid @RequestBody CreateTripResource tripResource, BindingResult result) {
         if(result.hasErrors()) {
             throw new InvalidCreateResourceException(this.formatMessage(result));
         }
+        validateCreate(tripResource);
+
+        Optional<Trip> duplicated = tripService.findDuplicated(tripResource.getOrigin(), tripResource.getDestination(), tripResource.getDate(), tripResource.getUserId());
+        if(duplicated.isPresent())
+            throw new InvalidCreateResourceException("A trip with same values already exists");
+
         return insert(tripResource);
     }
 

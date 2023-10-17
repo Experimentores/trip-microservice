@@ -28,7 +28,6 @@ public class Trip {
 
     @Column(name = "date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    @CreationTimestamp
     private Date date;
 
     @Column(name = "user_id", nullable = false)

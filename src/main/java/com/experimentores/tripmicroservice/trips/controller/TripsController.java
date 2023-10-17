@@ -1,27 +1,30 @@
 package com.experimentores.tripmicroservice.trips.controller;
 
 import com.crudjpa.controller.CrudController;
-import com.crudjpa.controller.SimpleCrudController;
 import com.crudjpa.util.TextDocumentation;
 import com.experimentores.tripmicroservice.trips.domain.model.Trip;
 import com.experimentores.tripmicroservice.trips.domain.services.ITripService;
+import com.experimentores.tripmicroservice.trips.exception.ErrorMessage;
 import com.experimentores.tripmicroservice.trips.mapping.TripMapper;
 import com.experimentores.tripmicroservice.trips.resources.CreateTripResource;
 import com.experimentores.tripmicroservice.trips.resources.TripResource;
+import com.experimentores.tripmicroservice.users.client.UserClient;
+import com.experimentores.tripmicroservice.users.domain.model.User;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/tripstore/v1/trips/")
 public class TripsController extends CrudController<Trip, Long, TripResource, CreateTripResource, Trip> {
     private final ITripService tripService;
     private final TripMapper tripMapper;
-
     public TripsController(ITripService tripService, TripMapper tripMapper) {
         super(tripService, tripMapper);
         this.tripService = tripService;

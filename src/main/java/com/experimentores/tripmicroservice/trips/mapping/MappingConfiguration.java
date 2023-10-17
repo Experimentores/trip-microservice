@@ -1,6 +1,5 @@
 package com.experimentores.tripmicroservice.trips.mapping;
 
-import com.experimentores.tripmicroservice.shared.mapping.EnhancedModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

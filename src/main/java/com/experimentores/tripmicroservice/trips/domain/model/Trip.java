@@ -31,6 +31,9 @@ public class Trip {
     @CreationTimestamp
     private Date date;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     /*
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", nullable = false)

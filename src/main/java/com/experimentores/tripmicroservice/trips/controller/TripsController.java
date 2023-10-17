@@ -14,16 +14,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tripstore/v1/trips/")
@@ -82,6 +81,43 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
     @DeleteMapping(value ="{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TripResource> deleteTrip(@PathVariable Long id) {
         return delete(id);
+    }
+
+    @GetMapping(value = "search/")
+    public ResponseEntity<List<TripResource>> searchTrip(@RequestParam(required = false) Long userId, @RequestParam(required = false) String destination,
+                                                         @RequestParam(required = false) String origin, @RequestParam(required = false) String afterThat) {
+
+        Set<Trip> trips = new HashSet<>();
+        Date date;
+
+        if (afterThat != null) {
+            date = Date.from(Instant.parse(afterThat));
+            trips.addAll(tripService.findByDateAfter(date));
+        } else {
+            date = null;
+        }
+        if (userId != null) {
+            trips.addAll(tripService.findByUserId(userId));
+        }
+        if (destination != null) {
+            trips.addAll(tripService.findByDestination(destination));
+        }
+        if (origin != null) {
+            trips.addAll(tripService.findByOrigin(origin));
+        }
+
+        List<Trip> filteredTrips = trips.stream()
+                .filter(trip -> (userId == null || trip.getUserId().equals(userId))
+                        && (destination == null || trip.getDestination().equals(destination))
+                        && (origin == null || trip.getOrigin().equals(origin))
+                        && (date == null || trip.getDate().after(date)))
+                .toList();
+
+
+        if(filteredTrips.isEmpty())
+            return new ResponseEntity<>(List.of(), HttpStatus.NOT_FOUND);
+
+        return ResponseEntity.ok(filteredTrips.stream().map(tripMapper::fromModelToResource).toList());
     }
 
     private String formatMessage(BindingResult result){

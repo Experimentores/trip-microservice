@@ -13,4 +13,5 @@ public interface ITripService extends ICrudService<Trip, Long> {
     List<Trip> findByDestination(String destination);
     List<Trip> findByOrigin(String origin);
     List<Trip> findByDateAfter(Date date);
+    List<Trip> deleteTripsByUserId(Long userId);
 }

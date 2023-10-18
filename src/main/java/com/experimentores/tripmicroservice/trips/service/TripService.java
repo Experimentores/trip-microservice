@@ -6,6 +6,7 @@ import com.experimentores.tripmicroservice.trips.domain.services.ITripService;
 import com.experimentores.tripmicroservice.trips.persistence.repository.ITripRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -44,6 +45,12 @@ public class TripService extends CrudService<Trip, Long> implements ITripService
     @Override
     public List<Trip> findByDateAfter(Date date) {
         return tripRepository.findTripsByDateAfter(date);
+    }
+
+    @Override
+    @Transactional
+    public List<Trip> deleteTripsByUserId(Long userId) {
+        return tripRepository.deleteTripsByUserId(userId);
     }
 
 

@@ -119,6 +119,17 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         return ResponseEntity.ok(filteredTrips.stream().map(tripMapper::fromModelToResource).toList());
     }
 
+    @DeleteMapping("delete/")
+    public ResponseEntity<List<TripResource>> deleteTripByUserId(@RequestParam Long userId) {
+
+        List<TripResource> deletedTrips = tripService.deleteTripsByUserId(userId)
+                .stream()
+                .map(mapper::fromModelToResource)
+                .toList();
+
+        return ResponseEntity.ok(deletedTrips);
+    }
+
     private String formatMessage(BindingResult result){
         List<Map<String,String>> errors = result.getFieldErrors().stream()
                 .map(err -> {

@@ -13,4 +13,5 @@ public interface ITripRepository extends JpaRepository<Trip, Long> {
     List<Trip> findTripsByDestination(String destination);
     List<Trip> findTripsByOrigin(String origin);
     List<Trip> findTripsByDateAfter(Date date);
+    List<Trip> deleteTripsByUserId(Long userId);
 }

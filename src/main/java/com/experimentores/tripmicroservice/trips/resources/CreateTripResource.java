@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,8 +21,10 @@ public class CreateTripResource {
     @NotNull
     private String destination;
 
-    @NotBlank
     @NotNull
-    @Positive
+    private Date date;
+
+    @NotNull
+    @Positive(message = "Must be a valid user id")
     private Long userId;
 }

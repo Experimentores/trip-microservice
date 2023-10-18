@@ -7,6 +7,10 @@ import com.experimentores.tripmicroservice.trips.persistence.repository.ITripRep
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class TripService extends CrudService<Trip, Long> implements ITripService {
     private final ITripRepository tripRepository;
@@ -15,4 +19,32 @@ public class TripService extends CrudService<Trip, Long> implements ITripService
         super(tripRepository);
         this.tripRepository = tripRepository;
     }
+
+
+    @Override
+    public Optional<Trip> findDuplicated(String origin, String destination, Date date, Long userId) {
+        return tripRepository.findTripByOriginAndDestinationAndDateAndUserId(origin, destination, date, userId);
+    }
+
+    @Override
+    public List<Trip> findByUserId(Long userId) {
+        return tripRepository.findTripsByUserId(userId);
+    }
+
+    @Override
+    public List<Trip> findByDestination(String destination) {
+        return tripRepository.findTripsByDestination(destination);
+    }
+
+    @Override
+    public List<Trip> findByOrigin(String origin) {
+        return tripRepository.findTripsByOrigin(origin);
+    }
+
+    @Override
+    public List<Trip> findByDateAfter(Date date) {
+        return tripRepository.findTripsByDateAfter(date);
+    }
+
+
 }

@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.Date;
 
@@ -28,8 +27,10 @@ public class Trip {
 
     @Column(name = "date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
-    @CreationTimestamp
     private Date date;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     /*
     @ManyToOne(fetch = FetchType.LAZY)

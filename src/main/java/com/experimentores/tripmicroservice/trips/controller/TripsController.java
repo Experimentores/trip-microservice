@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tripstore/v1/trips/")

@@ -1,5 +1,4 @@
 package com.experimentores.tripmicroservice.trips.domain.model;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

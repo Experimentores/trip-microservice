@@ -1,17 +1,19 @@
 package com.experimentores.tripmicroservice.trips.resources;
 
+import com.experimentores.tripmicroservice.users.domain.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-@EqualsAndHashCode(callSuper = true)
 @Data()
 @NoArgsConstructor
 @AllArgsConstructor
-public class TripResource extends CreateTripResource {
+public class TripResource {
     private Long id;
+    private String origin;
+    private String destination;
     private Date date;
+    private User user;
 }

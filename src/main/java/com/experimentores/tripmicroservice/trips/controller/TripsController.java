@@ -46,28 +46,26 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         }
     }
 
-    private Optional<User> getUserFromTrip(Trip resource) {
+    private Optional<User> getUserFromId(Long userId) {
         try {
-            User user = userClient.getUserById(resource.getUserId());
-            return  Optional.ofNullable(user);
+            User user = userClient.getUserById(userId);
+            return Optional.ofNullable(user);
         } catch (Exception e) {
             return Optional.empty();
         }
     }
 
     private List<TripResource> mapTrips(List<Trip> trips) {
-        HashMap<Long, User> users = new HashMap<>();
+        HashMap<Long, Optional<User>> users = new HashMap<>();
         return trips.stream().map(trip -> {
-            Optional<User> user = Optional.ofNullable(users.getOrDefault(trip.getUserId(), null));
+            Optional<User> user = users.getOrDefault(trip.getUserId(), Optional.empty());
             TripResource resource = mapper.fromModelToResource(trip);
             if(user.isEmpty()) {
-                user = getUserFromTrip(trip);
-                if (user.isPresent()) {
-                    User userResource = user.get();
-                    users.put(userResource.getId(), userResource);
-                }
+                user = getUserFromId(trip.getUserId());
+                users.put(trip.getUserId(), user);
             }
-            user.ifPresent(resource::setUser);
+            user.ifPresentOrElse(resource::setUser, () -> resource.setUser(null));
+
             return resource;
         }).toList();
     }
@@ -81,8 +79,8 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
 
     private TripResource getTripResource(Trip trip) {
         TripResource resource = mapper.fromModelToResource(trip);
-        Optional<User> user = getUserFromTrip(trip);
-        user.ifPresent(resource::setUser);
+        Optional<User> user = getUserFromId(trip.getUserId());
+        user.ifPresentOrElse(resource::setUser, () -> resource.setUser(null));
         return resource;
     }
 
@@ -102,14 +100,11 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Trips" + TextDocumentation.FOUNDS),
             @ApiResponse(responseCode = "404", description = TextDocumentation.NOT_FOUND),
-            @ApiResponse(responseCode = "501", description = TextDocumentation.INTERNAL_SERVER_ERROR),
-            @ApiResponse(responseCode = "204", description = "Trips" + TextDocumentation.HAVE_NOT_CONTENT)
+            @ApiResponse(responseCode = "500", description = TextDocumentation.INTERNAL_SERVER_ERROR),
     })
     public ResponseEntity<List<TripResource>> getAllTrips() {
         try {
             List<Trip> trips = tripService.getAll();
-            if(trips.isEmpty())
-                return ResponseEntity.noContent().build();
             return ResponseEntity.ok(mapTrips(trips));
         } catch (Exception e) {
             throw new RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR.name());
@@ -188,10 +183,14 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
 
     @DeleteMapping("delete/")
     public ResponseEntity<List<TripResource>> deleteTripByUserId(@RequestParam Long userId) {
-
+        Optional<User> user = getUserFromId(userId);
         List<TripResource> deletedTrips = tripService.deleteTripsByUserId(userId)
                 .stream()
-                .map(mapper::fromModelToResource)
+                .map(it -> {
+                    TripResource resource = mapper.fromModelToResource(it);
+                    user.ifPresentOrElse(resource::setUser, () -> resource.setUser(null));
+                    return resource;
+                })
                 .toList();
 
         return ResponseEntity.ok(deletedTrips);

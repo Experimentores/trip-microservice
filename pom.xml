@@ -95,14 +95,6 @@
             <artifactId>spring-cloud-config-client</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.crudjpa</groupId>
-            <artifactId>crud-jpa</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${pom.basedir}/src/lib/crud-jpa.jar</systemPath>
-        </dependency>
-
     </dependencies>
 
     <dependencyManagement>

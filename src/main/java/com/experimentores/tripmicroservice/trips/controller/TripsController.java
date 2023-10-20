@@ -48,7 +48,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
 
     private Optional<User> getUserFromId(Long userId) {
         try {
-            User user = userClient.getUserById(userId);
+            User user = userClient.getUserById(userId, "false");
             return Optional.ofNullable(user);
         } catch (Exception e) {
             return Optional.empty();
@@ -119,7 +119,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         validateCreate(tripResource);
         Optional<User> user;
         try {
-            user = Optional.ofNullable(userClient.getUserById(tripResource.getUserId()));
+            user = Optional.ofNullable(userClient.getUserById(tripResource.getUserId(), "false"));
             if(user.isEmpty())
                 throw new InvalidCreateResourceException("The user id isn't valid");
         } catch (Exception e) {

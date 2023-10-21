@@ -12,8 +12,6 @@ import com.experimentores.tripmicroservice.trips.resources.CreateTripResource;
 import com.experimentores.tripmicroservice.trips.resources.TripResource;
 import com.experimentores.tripmicroservice.users.client.IUserClient;
 import com.experimentores.tripmicroservice.users.domain.model.User;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
@@ -114,7 +112,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TripResource> createTrip(@Valid @RequestBody CreateTripResource tripResource, BindingResult result) {
         if(result.hasErrors()) {
-            throw new InvalidCreateResourceException(this.formatMessage(result));
+            throw new InvalidCreateResourceException(getErrorsFromResult(result));
         }
         validateCreate(tripResource);
         Optional<User> user;
@@ -196,21 +194,13 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         return ResponseEntity.ok(deletedTrips);
     }
 
-    private String formatMessage(BindingResult result){
-        List<Map<String,String>> errors = result.getFieldErrors().stream()
-                .map(err -> {
-                    Map<String,String> error =  new HashMap<>();
-                    error.put(err.getField(), err.getDefaultMessage());
-                    return error;
+    @Override
+    protected boolean isValidCreateResource(CreateTripResource resource) {
+        return true;
+    }
 
-                }).toList();
-
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(errors);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return "";
+    @Override
+    protected boolean isValidUpdateResource(Trip trip) {
+        return true;
     }
 }

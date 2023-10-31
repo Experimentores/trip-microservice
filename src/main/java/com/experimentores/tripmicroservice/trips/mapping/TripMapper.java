@@ -16,6 +16,11 @@ public class TripMapper implements IEntityMapper<Trip, TripResource, CreateTripR
     }
 
     @Override
+    public void fromCreateResourceToModel(CreateTripResource resource, Trip trip) {
+        mapper.map(resource, trip);
+    }
+
+    @Override
     public TripResource fromModelToResource(Trip score) {
         return mapper.map(score, TripResource.class);
     }
@@ -23,5 +28,10 @@ public class TripMapper implements IEntityMapper<Trip, TripResource, CreateTripR
     @Override
     public Trip fromUpdateResourceToModel(Trip trip) {
         return trip;
+    }
+
+    @Override
+    public void fromUpdateResourceToModel(Trip trip, Trip trip2) {
+        mapper.map(trip, trip2);
     }
 }

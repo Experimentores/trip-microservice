@@ -203,4 +203,9 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
     protected boolean isValidUpdateResource(Trip trip) {
         return true;
     }
+
+    @Override
+    protected Trip updateModelFromUpdateResource(Trip trip, Trip trip2) {
+        return null;
+    }
 }

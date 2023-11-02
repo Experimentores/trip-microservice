@@ -46,27 +46,32 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
 
     private Optional<User> getUserFromId(Long userId) {
         try {
-            User user = userClient.getUserById(userId, "false");
-            return Optional.ofNullable(user);
+            ResponseEntity<User> response = userClient.getUserById(userId);
+            return response.getStatusCode() == HttpStatus.OK ? Optional.ofNullable(response.getBody()) : Optional.empty();
         } catch (Exception e) {
             return Optional.empty();
         }
     }
 
-    private List<TripResource> mapTrips(List<Trip> trips) {
+    private List<TripResource> mapTrips(List<Trip> trips, boolean getUser) {
         HashMap<Long, Optional<User>> users = new HashMap<>();
         return trips.stream().map(trip -> {
-            Optional<User> user = users.getOrDefault(trip.getUserId(), Optional.empty());
+            Optional<User> user = users.get(trip.getUserId());
             TripResource resource = mapper.fromModelToResource(trip);
-            if(user.isEmpty()) {
-                user = getUserFromId(trip.getUserId());
-                users.put(trip.getUserId(), user);
+            if(user == null) {
+                if(getUser) {
+                    user = getUserFromId(trip.getUserId());
+                    users.put(trip.getUserId(), user);
+                }
+                else user = Optional.empty();
+
             }
             user.ifPresentOrElse(resource::setUser, () -> resource.setUser(null));
-
             return resource;
         }).toList();
     }
+
+    public List<TripResource> mapTrips(List<Trip> trips) { return mapTrips(trips, true); }
 
     private Trip getTrip(Long id) throws Exception {
         Optional<Trip> trip = tripService.getById(id);
@@ -115,27 +120,18 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
             throw new InvalidCreateResourceException(getErrorsFromResult(result));
         }
         validateCreate(tripResource);
-        Optional<User> user;
-        try {
-            user = Optional.ofNullable(userClient.getUserById(tripResource.getUserId(), "false"));
-            if(user.isEmpty())
-                throw new InvalidCreateResourceException("The user id isn't valid");
-        } catch (Exception e) {
+        Optional<User> user = getUserFromId(tripResource.getUserId());
+        if(user.isEmpty())
             throw new InvalidCreateResourceException("The user id isn't valid");
-        }
 
         Optional<Trip> duplicated = tripService.findDuplicated(tripResource.getOrigin(), tripResource.getDestination(), tripResource.getDate(), tripResource.getUserId());
         if(duplicated.isPresent())
             throw new InvalidCreateResourceException("A trip with same values already exists");
 
-        try {
-            Trip trip = tripService.save(mapper.fromCreateResourceToModel(tripResource));
-            TripResource resource = mapper.fromModelToResource(trip);
-            resource.setUser(user.get());
-            return ResponseEntity.ok(resource);
-        } catch (Exception e) {
-            throw new RuntimeException(HttpStatus.INTERNAL_SERVER_ERROR.name());
-        }
+        Trip trip = tripService.save(mapper.fromCreateResourceToModel(tripResource));
+        TripResource resource = mapper.fromModelToResource(trip);
+        resource.setUser(user.get());
+        return ResponseEntity.ok(resource);
 
     }
 
@@ -146,8 +142,22 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         return ResponseEntity.ok(getTripResource(trip));
     }
 
-    @GetMapping(value = "search/")
-    public ResponseEntity<List<TripResource>> searchTrip(@RequestParam(required = false) Long userId, @RequestParam(required = false) String destination,
+    @GetMapping(value = "users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<TripResource>> getTripsByUserId(@PathVariable Long id) {
+        List<Trip> trips = this.tripService.findByUserId(id);
+        List<TripResource> resources = mapTrips(trips, false);
+        return resources.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(resources);
+    }
+
+    @DeleteMapping("users/{id}")
+    public ResponseEntity<List<TripResource>> deleteTripByUserId(@PathVariable Long id) {
+        List<Trip> deletedTrips = tripService.deleteTripsByUserId(id);
+        List<TripResource> resources = mapTrips(deletedTrips, false);
+        return resources.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(resources);
+    }
+
+    @GetMapping(value = "search/", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<TripResource>> searchTrip(@RequestParam(required = false) String destination,
                                                          @RequestParam(required = false) String origin, @RequestParam(required = false) String afterThat) {
 
         Set<Trip> trips = new HashSet<>();
@@ -159,9 +169,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         } else {
             date = null;
         }
-        if (userId != null) {
-            trips.addAll(tripService.findByUserId(userId));
-        }
+
         if (destination != null) {
             trips.addAll(tripService.findByDestination(destination));
         }
@@ -170,28 +178,12 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         }
 
         List<Trip> filteredTrips = trips.stream()
-                .filter(trip -> (userId == null || trip.getUserId().equals(userId))
-                        && (destination == null || trip.getDestination().equals(destination))
+                .filter(trip -> (destination == null || trip.getDestination().equals(destination))
                         && (origin == null || trip.getOrigin().equals(origin))
                         && (date == null || trip.getDate().after(date)))
                 .toList();
 
         return ResponseEntity.ok(mapTrips(filteredTrips));
-    }
-
-    @DeleteMapping("delete/")
-    public ResponseEntity<List<TripResource>> deleteTripByUserId(@RequestParam Long userId) {
-        Optional<User> user = getUserFromId(userId);
-        List<TripResource> deletedTrips = tripService.deleteTripsByUserId(userId)
-                .stream()
-                .map(it -> {
-                    TripResource resource = mapper.fromModelToResource(it);
-                    user.ifPresentOrElse(resource::setUser, () -> resource.setUser(null));
-                    return resource;
-                })
-                .toList();
-
-        return ResponseEntity.ok(deletedTrips);
     }
 
     @Override

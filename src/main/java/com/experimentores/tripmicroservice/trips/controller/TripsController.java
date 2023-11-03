@@ -25,7 +25,7 @@ import java.time.Instant;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/tripstore/v1/trips/")
+@RequestMapping("${tripstore.trips-service.path}")
 public class TripsController extends CrudController<Trip, Long, TripResource, CreateTripResource, Trip> {
     private final ITripService tripService;
     private final IUserClient userClient;

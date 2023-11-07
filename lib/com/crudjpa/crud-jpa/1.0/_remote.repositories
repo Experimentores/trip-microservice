@@ -1,6 +1,0 @@
-#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
-#Sat Oct 21 11:32:28 PET 2023
-crud-jpa-1.0.pom>my-repository=
-crud-jpa-1.0.pom>=
-crud-jpa-1.0.jar>=
-crud-jpa-1.0.jar>my-repository=

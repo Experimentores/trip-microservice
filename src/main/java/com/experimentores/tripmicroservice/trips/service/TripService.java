@@ -1,6 +1,7 @@
 package com.experimentores.tripmicroservice.trips.service;
 
 import com.crudjpa.service.impl.CrudService;
+import com.experimentores.tripmicroservice.trips.domain.model.City;
 import com.experimentores.tripmicroservice.trips.domain.model.Trip;
 import com.experimentores.tripmicroservice.trips.domain.services.ITripService;
 import com.experimentores.tripmicroservice.trips.persistence.repository.ITripRepository;
@@ -23,7 +24,7 @@ public class TripService extends CrudService<Trip, Long> implements ITripService
 
 
     @Override
-    public Optional<Trip> findDuplicated(String origin, String destination, Date date, Long userId) {
+    public Optional<Trip> findDuplicated(City origin, City destination, Date date, Long userId) {
         return tripRepository.findTripByOriginAndDestinationAndDateAndUserId(origin, destination, date, userId);
     }
 
@@ -33,12 +34,12 @@ public class TripService extends CrudService<Trip, Long> implements ITripService
     }
 
     @Override
-    public List<Trip> findByDestination(String destination) {
+    public List<Trip> findByDestination(City destination) {
         return tripRepository.findTripsByDestination(destination);
     }
 
     @Override
-    public List<Trip> findByOrigin(String origin) {
+    public List<Trip> findByOrigin(City origin) {
         return tripRepository.findTripsByOrigin(origin);
     }
 

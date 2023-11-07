@@ -1,6 +1,5 @@
 package com.experimentores.tripmicroservice.trips.resources;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -13,13 +12,11 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateTripResource {
-    @NotBlank
     @NotNull
-    private String origin;
+    private Long originId;
 
-    @NotBlank
     @NotNull
-    private String destination;
+    private Long destinationId;
 
     @NotNull
     private Date date;

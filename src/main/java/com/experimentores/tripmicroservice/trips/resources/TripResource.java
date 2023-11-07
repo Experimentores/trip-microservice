@@ -12,8 +12,8 @@ import java.util.Date;
 @AllArgsConstructor
 public class TripResource {
     private Long id;
-    private String origin;
-    private String destination;
+    private CityResource origin;
+    private CityResource destination;
     private Date date;
     private User user;
 }

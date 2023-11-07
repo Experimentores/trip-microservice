@@ -2,7 +2,9 @@ package com.experimentores.tripmicroservice.trips.controller;
 
 import com.crudjpa.controller.CrudController;
 import com.crudjpa.util.TextDocumentation;
+import com.experimentores.tripmicroservice.trips.domain.model.City;
 import com.experimentores.tripmicroservice.trips.domain.model.Trip;
+import com.experimentores.tripmicroservice.trips.domain.services.ICityService;
 import com.experimentores.tripmicroservice.trips.domain.services.ITripService;
 import com.experimentores.tripmicroservice.trips.exception.InvalidCreateResourceException;
 import com.experimentores.tripmicroservice.trips.exception.ResourceNotFoundException;
@@ -29,11 +31,13 @@ import java.util.*;
 public class TripsController extends CrudController<Trip, Long, TripResource, CreateTripResource, Trip> {
     private final ITripService tripService;
     private final IUserClient userClient;
+    private final ICityService cityService;
 
-    public TripsController(ITripService tripService, TripMapper tripMapper, IUserClient userClient) {
+    public TripsController(ITripService tripService, TripMapper tripMapper, IUserClient userClient, ICityService cityService) {
         super(tripService, tripMapper);
         this.tripService = tripService;
         this.userClient = userClient;
+        this.cityService = cityService;
     }
 
     private void validateCreate(CreateTripResource resource) {
@@ -73,7 +77,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
 
     public List<TripResource> mapTrips(List<Trip> trips) { return mapTrips(trips, true); }
 
-    private Trip getTrip(Long id) throws Exception {
+    private Trip getTrip(Long id) {
         Optional<Trip> trip = tripService.getById(id);
         if(trip.isEmpty())
             throw new ResourceNotFoundException("Trip with id %d not found".formatted(id));
@@ -93,7 +97,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
             @ApiResponse(responseCode = "404", description = "Trip" + TextDocumentation.NOT_FOUND),
             @ApiResponse(responseCode = "501", description = TextDocumentation.INTERNAL_SERVER_ERROR)
     })
-    public ResponseEntity<TripResource> getTripById(@PathVariable Long id) throws Exception {
+    public ResponseEntity<TripResource> getTripById(@PathVariable Long id) {
         Trip trip = getTrip(id);
         return ResponseEntity.ok(getTripResource(trip));
     }
@@ -122,13 +126,26 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         validateCreate(tripResource);
         Optional<User> user = getUserFromId(tripResource.getUserId());
         if(user.isEmpty())
-            throw new InvalidCreateResourceException("The user id isn't valid");
+            throw new InvalidCreateResourceException("The user id isn't valid or users service is down");
 
-        Optional<Trip> duplicated = tripService.findDuplicated(tripResource.getOrigin(), tripResource.getDestination(), tripResource.getDate(), tripResource.getUserId());
+        Optional<City> origin = cityService.getById(tripResource.getOriginId());
+        if(origin.isEmpty())
+            throw new InvalidCreateResourceException("The origin city id is not valid");
+
+        Optional<City> destination = cityService.getById(tripResource.getDestinationId());
+        if(destination.isEmpty())
+            throw new InvalidCreateResourceException("The destination city id is not valid");
+
+        Optional<Trip> duplicated = tripService.findDuplicated(origin.get(), destination.get(), tripResource.getDate(), tripResource.getUserId());
+
         if(duplicated.isPresent())
             throw new InvalidCreateResourceException("A trip with same values already exists");
 
-        Trip trip = tripService.save(mapper.fromCreateResourceToModel(tripResource));
+        Trip trip = mapper.fromCreateResourceToModel(tripResource);
+        trip.setOrigin(origin.get());
+        trip.setDestination(destination.get());
+        trip = tripService.save(trip);
+
         TripResource resource = mapper.fromModelToResource(trip);
         resource.setUser(user.get());
         return ResponseEntity.ok(resource);
@@ -136,7 +153,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
     }
 
     @DeleteMapping(value ="{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TripResource> deleteTrip(@PathVariable Long id) throws Exception {
+    public ResponseEntity<TripResource> deleteTrip(@PathVariable Long id) {
         Trip trip = getTrip(id);
         tripService.delete(id);
         return ResponseEntity.ok(getTripResource(trip));
@@ -171,15 +188,17 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         }
 
         if (destination != null) {
-            trips.addAll(tripService.findByDestination(destination));
+            Optional<City> city = cityService.findCityByName(destination);
+            city.ifPresent(value -> trips.addAll(tripService.findByDestination(value)));
         }
         if (origin != null) {
-            trips.addAll(tripService.findByOrigin(origin));
+            Optional<City> city = cityService.findCityByName(destination);
+            city.ifPresent(value -> trips.addAll(tripService.findByOrigin(value)));
         }
 
         List<Trip> filteredTrips = trips.stream()
-                .filter(trip -> (destination == null || trip.getDestination().equals(destination))
-                        && (origin == null || trip.getOrigin().equals(origin))
+                .filter(trip -> (destination == null || trip.getDestination().getName().equals(destination))
+                        && (origin == null || trip.getOrigin().getName().equals(origin))
                         && (date == null || trip.getDate().after(date)))
                 .toList();
 

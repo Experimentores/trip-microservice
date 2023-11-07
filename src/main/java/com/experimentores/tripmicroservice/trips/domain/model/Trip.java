@@ -1,4 +1,5 @@
 package com.experimentores.tripmicroservice.trips.domain.model;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,11 +19,20 @@ public class Trip {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "origin", nullable = false, length = 50)
+    /*
+    * @Column(name = "origin", nullable = false, length = 50)
     private String origin;
+    * */
 
-    @Column(name = "destination", nullable = false, length = 50)
-    private String destination;
+    @ManyToOne
+    @JoinColumn(name = "origin_id", nullable = false)
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    private City origin;
+
+    @ManyToOne
+    @JoinColumn(name = "destination_id", nullable = false)
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
+    private City destination;
 
     @Column(name = "date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)

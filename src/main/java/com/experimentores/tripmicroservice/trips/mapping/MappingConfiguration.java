@@ -9,4 +9,7 @@ public class MappingConfiguration {
     public TripMapper tripMapper() {
         return new TripMapper();
     }
+
+    @Bean
+    public CityMapper cityMapper() { return new CityMapper(); }
 }

@@ -48,6 +48,7 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
         }
     }
 
+
     private Optional<User> getUserFromId(Long userId) {
         try {
             ResponseEntity<User> response = userClient.getUserById(userId);
@@ -203,6 +204,11 @@ public class TripsController extends CrudController<Trip, Long, TripResource, Cr
                 .toList();
 
         return ResponseEntity.ok(mapTrips(filteredTrips));
+    }
+
+    @RequestMapping(value = "healthcheck", method = RequestMethod.HEAD)
+    ResponseEntity<Void> isOk() {
+        return ResponseEntity.ok().build();
     }
 
     @Override

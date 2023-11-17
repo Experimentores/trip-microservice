@@ -1,5 +1,7 @@
 package com.experimentores.tripmicroservice.shared.mapping;
 
+import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.spi.MatchingStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -7,7 +9,9 @@ import org.springframework.context.annotation.Configuration;
 public class MappingConfiguration {
     @Bean
     public EnhancedModelMapper modelMapper() {
-        return new EnhancedModelMapper();
+        EnhancedModelMapper modelMapper = new EnhancedModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        return modelMapper;
     }
 
 }
